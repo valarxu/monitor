@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server'
 import { useTransactionStore } from '@/services/transactionStore'
-import fs from 'fs'
-import path from 'path'
 
-// 添加文件日志功能
+// 修改日志函数，使用 console.log
 const logToFile = (message: string) => {
-  const logPath = path.join(process.cwd(), 'webhook.log')
   const timestamp = new Date().toISOString()
-  const logMessage = `${timestamp}: ${message}\n`
-  fs.appendFileSync(logPath, logMessage)
+  // 在 Vercel 中，console.log 会被记录到部署日志中
+  console.log(`[${timestamp}] ${message}`)
 }
 
 export async function OPTIONS() {
