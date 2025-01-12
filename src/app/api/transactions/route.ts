@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { transactionManager } from '@/services/transactionStore'
 
 export const runtime = 'edge'
 
@@ -11,9 +12,16 @@ export async function GET() {
       }
 
       // 发送初始数据
-      if (globalThis.latestTransactions) {
-        send(globalThis.latestTransactions)
+      const initialTransactions = transactionManager.getTransactions()
+      if (initialTransactions.length > 0) {
+        send(initialTransactions)
       }
+
+      // 添加监听器以接收新的交易
+      const listener = (transactions: unknown) => {
+        send(transactions)
+      }
+      transactionManager.addListener(listener)
 
       // 保持连接活跃
       const interval = setInterval(() => {
@@ -23,6 +31,7 @@ export async function GET() {
       // 清理
       return () => {
         clearInterval(interval)
+        transactionManager.removeListener(listener)
       }
     }
   })

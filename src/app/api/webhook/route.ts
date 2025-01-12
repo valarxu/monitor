@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { Transaction } from '@/types/types'
+import { transactionManager } from '@/services/transactionStore'
 
 const logTo = (message: string) => {
   const timestamp = new Date().toISOString()
@@ -49,8 +50,8 @@ export async function POST(req: Request) {
       description: tx.description
     }))
 
-    // 存储交易数据到全局变量中
-    globalThis.latestTransactions = transactions
+    // 使用 TransactionManager 存储交易数据
+    transactionManager.addTransactions(transactions)
 
     return NextResponse.json({ success: true })
   } catch (error: unknown) {
