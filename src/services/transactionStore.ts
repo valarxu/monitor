@@ -1,11 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-
-interface Transaction {
-  signature: string
-  type: string
-  timestamp: number
-}
+import type { Transaction } from '@/types/types'
 
 interface TransactionStore {
   transactions: Transaction[]

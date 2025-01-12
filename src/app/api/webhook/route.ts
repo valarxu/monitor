@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server'
-import { useTransactionStore } from '@/services/transactionStore'
+import type { Transaction } from '@/types/types'
 
-// 修改日志函数，使用 console.log
-const logToFile = (message: string) => {
+const logTo = (message: string) => {
   const timestamp = new Date().toISOString()
-  // 在 Vercel 中，console.log 会被记录到部署日志中
   console.log(`[${timestamp}] ${message}`)
 }
 
 export async function OPTIONS() {
-  logToFile('OPTIONS request received')
+  logTo('OPTIONS request received')
   return new NextResponse(null, {
     status: 200,
     headers: {
@@ -22,44 +20,42 @@ export async function OPTIONS() {
 
 export async function POST(req: Request) {
   try {
-    logToFile('POST request received')
-    logToFile(`Headers: ${JSON.stringify(Object.fromEntries(req.headers))}`)
+    logTo('POST request received')
+    logTo(`Headers: ${JSON.stringify(Object.fromEntries(req.headers))}`)
     
     const rawBody = await req.text()
-    logToFile(`Raw body: ${rawBody}`)
+    logTo(`Raw body: ${rawBody}`)
     
     let body
     try {
       body = JSON.parse(rawBody)
-      logToFile(`Parsed body: ${JSON.stringify(body)}`)
+      logTo(`Parsed body: ${JSON.stringify(body)}`)
     } catch (e: unknown) {
       const error = e instanceof Error ? e : new Error(String(e))
-      logToFile(`Error parsing body: ${error.message}`)
+      logTo(`Error parsing body: ${error.message}`)
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
     
     if (!Array.isArray(body)) {
-      logToFile('Invalid payload format - expected array')
+      logTo('Invalid payload format - expected array')
       return NextResponse.json({ error: 'Invalid payload format' }, { status: 400 })
     }
 
     // 处理 Helius webhook 的交易数据
-    const transactions = body.map(tx => ({
-      signature: tx.signature || 'unknown',
-      type: tx.type || 'unknown',
-      timestamp: tx.timestamp || Date.now(),
+    const transactions: Transaction[] = body.map(tx => ({
+      signature: tx.signature,
+      type: tx.type,
+      timestamp: tx.timestamp,
+      description: tx.description
     }))
 
-    const store = useTransactionStore.getState()
-    transactions.forEach(tx => {
-      store.addTransaction(tx)
-      logToFile(`Transaction added: ${JSON.stringify(tx)}`)
-    })
-    
+    // 存储交易数据到全局变量中
+    globalThis.latestTransactions = transactions
+
     return NextResponse.json({ success: true })
   } catch (error: unknown) {
     const err = error instanceof Error ? error : new Error(String(error))
-    logToFile(`Error: ${err.message}`)
+    logTo(`Error: ${err.message}`)
     return NextResponse.json(
       { error: 'Internal Server Error', details: err.message },
       { status: 500 }

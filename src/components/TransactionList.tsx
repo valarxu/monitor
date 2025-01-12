@@ -1,14 +1,38 @@
 'use client'
 
-import { useTransactionStore } from '@/services/transactionStore'
 import { useEffect } from 'react'
+import { useTransactionStore } from '@/services/transactionStore'
 
 export default function TransactionList() {
   const transactions = useTransactionStore((state) => state.transactions)
+  const setTransactions = useTransactionStore((state) => state.setTransactions)
+  const addTransaction = useTransactionStore((state) => state.addTransaction)
 
   useEffect(() => {
-    console.log('Transactions updated:', transactions)
-  }, [transactions])
+    const eventSource = new EventSource('/api/transactions')
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        if (Array.isArray(data)) {
+          setTransactions(data)
+        } else if (data.type !== 'ping') {
+          addTransaction(data)
+        }
+      } catch (error) {
+        console.error('Error processing SSE message:', error)
+      }
+    }
+
+    eventSource.onerror = (error) => {
+      console.error('SSE Error:', error)
+      eventSource.close()
+    }
+
+    return () => {
+      eventSource.close()
+    }
+  }, [setTransactions, addTransaction])
 
   return (
     <div className="w-full max-w-2xl">
@@ -39,6 +63,11 @@ export default function TransactionList() {
               <div className="mt-2 text-sm">
                 Type: {tx.type}
               </div>
+              {tx.description && (
+                <div className="mt-1 text-sm text-gray-500">
+                  {tx.description}
+                </div>
+              )}
             </div>
           ))}
         </div>
