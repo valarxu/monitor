@@ -1,13 +1,23 @@
 import { NextResponse } from 'next/server'
+import { useTransactionStore } from '@/services/transactionStore'
 
 export async function POST(req: Request) {
   try {
+    console.log('Webhook received - headers:', Object.fromEntries(req.headers))
+    
     const body = await req.json()
+    console.log('Webhook body:', JSON.stringify(body, null, 2))
     
-    // 这里可以处理接收到的交易数据
-    console.log('Received webhook:', body)
+    const transaction = {
+      signature: body.signature || body.txId,
+      type: body.type,
+      timestamp: body.timestamp || Date.now(),
+    }
     
-    // 这里可以添加数据存储逻辑
+    const store = useTransactionStore.getState()
+    store.addTransaction(transaction)
+    
+    console.log('Transaction added to store:', transaction)
     
     return NextResponse.json({ success: true })
   } catch (error) {

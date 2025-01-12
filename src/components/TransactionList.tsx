@@ -1,13 +1,20 @@
+'use client'
+
 import { useEffect } from 'react'
 import { useTransactionStore } from '@/services/transactionStore'
 
 export default function TransactionList() {
   const transactions = useTransactionStore((state) => state.transactions)
+  const addTransaction = useTransactionStore((state) => state.addTransaction)
 
-  // 这里可以添加获取历史交易的逻辑
   useEffect(() => {
-    // 示例: 从后端获取交易历史
-  }, [])
+    // 添加测试数据
+    addTransaction({
+      signature: 'test-signature-123',
+      type: 'TEST',
+      timestamp: Date.now(),
+    })
+  }, [addTransaction])
 
   return (
     <div className="w-full max-w-2xl">
