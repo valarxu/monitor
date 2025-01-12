@@ -38,21 +38,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
     
-    if (!body || typeof body !== 'object') {
-      logToFile('Invalid payload format')
+    if (!Array.isArray(body)) {
+      logToFile('Invalid payload format - expected array')
       return NextResponse.json({ error: 'Invalid payload format' }, { status: 400 })
     }
 
-    const transaction = {
-      signature: body.signature || body.txId || 'unknown',
-      type: body.type || 'unknown',
-      timestamp: body.timestamp || Date.now(),
-    }
-    
+    // 处理 Helius webhook 的交易数据
+    const transactions = body.map(tx => ({
+      signature: tx.signature || 'unknown',
+      type: tx.type || 'unknown',
+      timestamp: tx.timestamp || Date.now(),
+    }))
+
     const store = useTransactionStore.getState()
-    store.addTransaction(transaction)
-    
-    logToFile(`Transaction added: ${JSON.stringify(transaction)}`)
+    transactions.forEach(tx => {
+      store.addTransaction(tx)
+      logToFile(`Transaction added: ${JSON.stringify(tx)}`)
+    })
     
     return NextResponse.json({ success: true })
   } catch (error: unknown) {

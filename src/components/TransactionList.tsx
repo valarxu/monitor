@@ -1,30 +1,22 @@
 'use client'
 
 import { useTransactionStore } from '@/services/transactionStore'
+import { useEffect } from 'react'
 
 export default function TransactionList() {
   const transactions = useTransactionStore((state) => state.transactions)
-  const addTransaction = useTransactionStore((state) => state.addTransaction)
 
-  // 添加测试函数
-  const handleTestAdd = () => {
-    addTransaction({
-      signature: `test-${Date.now()}`,
-      type: 'TEST',
-      timestamp: Date.now(),
-    })
-  }
+  useEffect(() => {
+    console.log('Transactions updated:', transactions)
+  }, [transactions])
 
   return (
     <div className="w-full max-w-2xl">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Recent Transactions</h2>
-        <button 
-          onClick={handleTestAdd}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Add Test Transaction
-        </button>
+        <div className="text-sm text-gray-500">
+          Total: {transactions.length}
+        </div>
       </div>
       
       {transactions.length === 0 ? (

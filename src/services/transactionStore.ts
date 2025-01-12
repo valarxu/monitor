@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 interface Transaction {
   signature: string
@@ -12,12 +13,19 @@ interface TransactionStore {
   setTransactions: (txs: Transaction[]) => void
 }
 
-export const useTransactionStore = create<TransactionStore>((set) => ({
-  transactions: [],
-  addTransaction: (tx) => 
-    set((state) => ({
-      transactions: [tx, ...state.transactions].slice(0, 100) // 保留最新的100条
-    })),
-  setTransactions: (txs) => 
-    set({ transactions: txs }),
-})) 
+export const useTransactionStore = create<TransactionStore>()(
+  persist(
+    (set) => ({
+      transactions: [],
+      addTransaction: (tx) => 
+        set((state) => ({
+          transactions: [tx, ...state.transactions].slice(0, 100)
+        })),
+      setTransactions: (txs) => 
+        set({ transactions: txs }),
+    }),
+    {
+      name: 'transaction-storage',
+    }
+  )
+) 
